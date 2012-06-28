@@ -49,7 +49,7 @@ void error(int32_t code) {
     }
 
     case X_SGNL_INT_TERM: {
-      fprintf(stderr, "\nCaught SIGINT/SIGTERM after %llu tries - exiting.\n",
+      fprintf(stderr, "\nCaught SIGINT/SIGTERM after %"PRIu64" tries - exiting.\n",
               loop);
       break;
     }

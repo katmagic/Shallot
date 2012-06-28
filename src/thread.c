@@ -159,7 +159,7 @@ void *monitor_proc(void *unused) {
     if(!elapsed)
       continue; // be paranoid and avoid divide-by-zero exceptions
 
-    fprintf(stderr,"\033[u\033[KHashes: %-20llu  Time: %-10d  Speed: %-llu",
+    fprintf(stderr,"\033[u\033[KHashes: %-20"PRIu64"  Time: %-10d  Speed: %-"PRIu64"",
            loop, (int)elapsed, loop / elapsed);
 
   }

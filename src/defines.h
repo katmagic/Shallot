@@ -2,6 +2,7 @@
 #define DEFINES_H
 
 #include "config.h"
+#include <inttypes.h>
 
 // our ever-important version string
 #define VERSION "0.0.3-alpha"
@@ -28,7 +29,7 @@
 #define BASE32_ONIONLEN 16
 #define BASE32_ALPHABET "abcdefghijklmnopqrstuvwxyz234567"
 
-#define PRINT_ONION_STR "Found matching domain after %llu tries: %s.onion"
+#define PRINT_ONION_STR "Found matching domain after %"PRIi64" tries: %s.onion"
 #define PRINT_ONION_MAX 79
 
 #ifdef LINUX_PORT
