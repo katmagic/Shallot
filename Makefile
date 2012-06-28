@@ -1,24 +1,48 @@
 #!/bin/sh
 
-all:
-	gcc -O3 -Wall -I/usr/local/include -c src/math.c -o src/math.o
-	gcc -O3 -Wall -I/usr/local/include -c src/error.c -o src/error.o
-	gcc -O3 -Wall -I/usr/local/include -c src/linux.c -o src/linux.o
-	gcc -O3 -Wall -I/usr/local/include -c src/print.c -o src/print.o
-	gcc -O3 -Wall -I/usr/local/include -c src/thread.c -o src/thread.o
-	gcc -O3 -Wall -I/usr/local/include -c src/shallot.c -o src/shallot.o
-	gcc -O3 -Wall -L/usr/local/lib -pthread src/math.o src/error.o src/linux.o src/print.o src/thread.o src/shallot.o -lm -lpthread -lssl -lcrypto -o shallot
-debug:
-	gcc -g -O3 -Wall -I/usr/local/include -c src/math.c -o src/math.o
-	gcc -g -O3 -Wall -I/usr/local/include -c src/error.c -o src/error.o
-	gcc -g -O3 -Wall -I/usr/local/include -c src/linux.c -o src/linux.o
-	gcc -g -O3 -Wall -I/usr/local/include -c src/print.c -o src/print.o
-	gcc -g -O3 -Wall -I/usr/local/include -c src/thread.c -o src/thread.o
-	gcc -g -O3 -Wall -I/usr/local/include -c src/shallot.c -o src/shallot.o
-	gcc -g -O3 -Wall -L/usr/local/lib -pthread src/math.o src/error.o src/linux.o src/print.o src/thread.o src/shallot.o -lm -lpthread -lssl -lcrypto -o shallot
+
+
+ifeq ($(CC),)
+  CC=gcc
+endif
+
+ifeq ($(RM),)
+  RM=rm -f
+endif
+
+ifeq ($(CP),)
+  CP=cp
+endif
+
+
+CFLAGS:=$(CFLAGS) -O3 -I/usr/include -I/usr/local/include -L/usr/lib -L/usr/local/lib
+LIBS:=-lm -lpthread -lssl -lcrypto
+WARNING_FLAGS:=$(WARNING_FLAGS) -Wall
+DEBUG_FLAGS:=$(DEBUG_FLAGS) -g
+
+
+OBJS:=src/math.o src/error.o src/linux.o src/print.o src/thread.o src/shallot.o
+OBJS_DBG:=src/math.dbg.o src/error.dbg.o src/linux.dbg.o src/print.dbg.o src/thread.dbg.o src/shallot.dbg.o
+
+
+all: $(OBJS)
+	$(CC) $(CFLAGS) -pthread $^ -o shallot $(LIBS)
+
+debug: $(OBJS_DBG)
+	$(CC)  $(DEBUG_FLAGS) $(CFLAGS) -pthread $^ -o shallot $(LIBS)
+
 clean:
-	rm -f shallot src/math.o src/error.o src/linux.o src/print.o src/thread.o src/shallot.o
+	$(RM)  shallot src/*.o
 install:
-	cp shallot /usr/bin/
+	$(CP) shallot /usr/bin/
 uninstall:
-	rm /usr/bin/shallot
+	$(RM) /usr/bin/shallot
+
+
+
+src/%.o: src/%.c
+	$(CC) $(CFLAGS) $(WARNING_FLAGS) -o $@ -c $^
+
+src/%.dbg.o: src/%.c
+	$(CC) $(DEBUG_FLAGS) $(CFLAGS) $(WARNING_FLAGS) -o $@ -c $^
+
