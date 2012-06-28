@@ -25,7 +25,6 @@
 
 /* TODO:
  * - finish all TODOs
- * - figure out a way to allow for -p w/o a pattern being supplied
  * - allow -m to be used with -f (use file for status output) [v0.0.3]
  */
 
@@ -125,6 +124,15 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
   printf("WARNING: Threads will default to 1 unless specified with -t\n");
   #endif
 
+  // pattern help
+  if( argv >= x)
+  {
+    if( strcmp(argv[x], "-p") == 0)
+    {
+      pattern();
+    }
+  }
+
   for(; x < argc - 1; x++) { // options parsing
     if(argv[x][0] != '-') {
       fprintf(stderr, "Error: Options must start with '-'\n");
@@ -144,10 +152,6 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
         }
         case 'o': { // prime optimization
           optimum = 1;
-          break;
-        }
-        case 'p': { // pattern help
-          pattern();
           break;
         }
         case 'f': { // file <file>
