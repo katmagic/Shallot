@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
   #endif
 
   // pattern help
-  if( argv >= x)
+  if( argc >= x)
   {
     if( strcmp(argv[x], "-p") == 0)
     {
