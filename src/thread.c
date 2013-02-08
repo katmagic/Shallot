@@ -29,7 +29,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
   uint8_t buf[SHA1_DIGEST_LEN],
           der[RSA_EXP_DER_LEN + 1], // TODO: is the size of this right?
           optimum = *(uint8_t*)params;
-  char onion[BASE32_ONIONLEN];
+  char onion[BASE32_ONIONLEN + 1];
   SHA_CTX hash, copy;
   RSA *rsa;
 
