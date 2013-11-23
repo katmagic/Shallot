@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
   uint8_t daemon = 0, optimum = 0;
   uint32_t threads = 1, x = 1;
   char *file = 0;
+  char *simple_pattern = 0;
   elim = DEFAULT_E_LIMIT;
   loop = 0;
   found = 0;
@@ -191,6 +192,28 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
           dbreak = 1;
           break;
         }
+        
+        case 'b': { // put pattern at beginning of .onion
+          char* beginning = "^";
+          char* then = argv[x + 1];
+          char* combined[1];
+          strcpy(combined, beginning);
+          strcat(combined, then);
+          simple_pattern = combined;
+          break;
+        }
+
+        case 'a': { // put pattern anywhere in .onion
+          simple_pattern = argv[x + 1];
+          break;
+        }
+
+        case 'n': { // put pattern at end of .onion
+          simple_pattern = argv[x + 1];
+          strcat(simple_pattern, "$");
+          break;
+        }
+        
         default: { // unrecognized
           fprintf(stderr, "Error: Unrecognized option - '%c'\n", argv[x][y]);
           usage();
@@ -218,7 +241,13 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
     error(X_NEED_FILE_OUT);
 
   // compile regular expression from argument
-  char *pattern = argv[argc - 1];
+  char *pattern = 0;
+  if(simple_pattern) {
+    pattern = simple_pattern;
+  }
+  else {
+    pattern = argv[argc - 1];
+  }
 
   if(*pattern == '-')
     error(X_REGEX_INVALID);
