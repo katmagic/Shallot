@@ -3,13 +3,6 @@
 #include "math.h"
 #include "defines.h"
 
-void int_pow(uint32_t base, uint8_t pwr, uint64_t *out) { // integer pow()
-  *out = (uint64_t)base;
-  uint8_t round = 1;
-  for(; round < pwr; round++)
-    *out *= base;
-}
-
 // LCM for BIGNUMs
 uint8_t BN_lcm(BIGNUM *r, BIGNUM *a, BIGNUM *b, BIGNUM *gcd, BN_CTX *ctx) {
   BIGNUM *tmp = BN_CTX_get(ctx);

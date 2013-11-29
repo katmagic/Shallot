@@ -24,7 +24,6 @@
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 
-void int_pow(uint32_t base, uint8_t pwr, uint64_t *out);
 uint8_t BN_lcm(BIGNUM *r, BIGNUM *a, BIGNUM *b, BIGNUM *gcd, BN_CTX *ctx);
 RSA *easygen(uint16_t num, uint8_t len, uint8_t *der, uint8_t edl,
              SHA_CTX *ctx);

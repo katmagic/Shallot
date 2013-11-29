@@ -49,9 +49,9 @@ void *worker(void *params) { // life cycle of a cracking pthread
 
     uint8_t e_bytes = RSA_PK_E_LENGTH; // number of bytes e occupies
     uint64_t e = RSA_PK_EXPONENT;      // public exponent
-    uint64_t e_byte_thresh;
+    uint64_t e_byte_thresh = 1;
 
-    int_pow(2, e_bytes * 8, &e_byte_thresh);
+    e_byte_thresh <<= e_bytes * 8;
     e_byte_thresh++;
 
     uint8_t *e_ptr = ((uint8_t*)&e_be) + 8 - e_bytes;
@@ -98,7 +98,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
 
       if(e == e_byte_thresh) { // ASN.1 stuff (hey, it could be worse!)
         // calculate our new threshold
-        int_pow(2, ++e_bytes * 8, &e_byte_thresh);
+        e_byte_thresh <<= ++e_bytes * 8;
         e_byte_thresh++;
 
         if(optimum) {
