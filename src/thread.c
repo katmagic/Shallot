@@ -128,7 +128,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
 }
 
 void *monitor_proc(void *unused) {
-  fprintf(stderr,"\033[sPlease wait a moment for statistics...");
+  fprintf(stderr,"\033[sPlease wait a moment for statistics...\n");
   time_t start = time(NULL);
 
   for(;;) {
@@ -159,7 +159,7 @@ void *monitor_proc(void *unused) {
     if(!elapsed)
       continue; // be paranoid and avoid divide-by-zero exceptions
 
-    fprintf(stderr,"\033[u\033[KHashes: %-20"PRIu64"  Time: %-10d  Speed: %-"PRIu64"",
+    fprintf(stderr,"\033[u\033[KHashes: %-20"PRIu64"  Time: %-10d  Speed: %-"PRIu64"\n",
            loop, (int)elapsed, loop / elapsed);
 
   }
