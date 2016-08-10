@@ -59,6 +59,30 @@ void terminate(int signum) { // Ctrl-C/kill handler
   error(X_SGNL_INT_TERM);
 }
 
+int is_base32_abc(char c) {
+  const char* it;
+  for(it = BASE32_ALPHABET; *it; ++it) {
+    if (c == *it)
+      return 1;
+  }
+  return 0;
+}
+
+int is_prefix(const char* pattern) {
+  if(strlen(pattern) == 0)
+    return 0;
+  if(pattern[0] != '^')
+    return 0;
+  const char* actual_pattern = pattern + 1; // cut ^
+  const char* it;
+  for(it = actual_pattern; *it; ++it) {
+    if(!is_base32_abc(*it)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int main(int argc, char *argv[]) { // onions are fun, here we go
   signal(SIGTERM, terminate); // always let people kill
 
@@ -223,10 +247,15 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
   if(*pattern == '-')
     error(X_REGEX_INVALID);
 
-  regex = malloc(REGEX_COMP_LMAX);
-
-  if(regcomp(regex, pattern, REG_EXTENDED | REG_NOSUB))
-    error(X_REGEX_COMPILE);
+  if(is_prefix(pattern)) {
+    const char* actual_pattern = pattern + 1; // cut ^
+    strncpy(prefix, actual_pattern, BASE32_ONIONLEN);
+    prefix_size = strlen(actual_pattern);
+  } else {
+    regex = malloc(REGEX_COMP_LMAX);
+    if (regcomp(regex, pattern, REG_EXTENDED | REG_NOSUB))
+      error(X_REGEX_COMPILE);
+  }
 
   if(file) {
     umask(077); // remove permissions to be safe
@@ -288,6 +317,8 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
     pthread_join(lucky_thread, NULL); // wait for the lucky thread to exit
   }
 
-  regfree(regex);
+  if(regex)
+    regfree(regex);
+
   return 0;
 }

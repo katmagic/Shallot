@@ -71,7 +71,13 @@ void *worker(void *params) { // life cycle of a cracking pthread
       base32_onion(onion, buf); // base32-encode SHA1 digest
       loop++;                   // keep track of our tries...
 
-      if(!regexec(regex, onion, 0, 0, 0)) { // check for a match
+      if(
+        regex
+        ?
+        (!regexec(regex, onion, 0, 0, 0))
+        :
+        (memcmp(prefix, onion, prefix_size) == 0)
+      ) { // check for a match
 
         // let our main thread know on which thread to wait
         lucky_thread = pthread_self();
