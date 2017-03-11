@@ -14,6 +14,7 @@ void usage(void) {
          "  -m        : Monitor mode (incompatible with -f)\n"
 	 "  -o        : Optimize RSA key size to improve SHA-1 hashing speed\n"
          "  -p        : Print 'pattern' help and exit\n"
+         "  -c        : Continue finding matches after a match is found\n"
          "  -f <file> : Write output to <file>\n"
          "  -t count  : Forces exactly count threads to be spawned\n"
          "  -x secs   : Sets a limit on the maximum execution time. Has no effect without -m\n"

@@ -73,10 +73,6 @@ void *worker(void *params) { // life cycle of a cracking pthread
 
       if(!regexec(regex, onion, 0, 0, 0)) { // check for a match
 
-        // let our main thread know on which thread to wait
-        lucky_thread = pthread_self();
-        found = 1; // kill off our other threads, asynchronously
-
         if(monitor)
           printf("\n"); // keep our printing pretty!
 
@@ -89,9 +85,19 @@ void *worker(void *params) { // life cycle of a cracking pthread
         print_onion(onion); // print our domain
         print_prkey(rsa);   // and more importantly the key
 
-        RSA_free(rsa); // free up what's left
+        if (!continuous) { // no -c option — terminate
 
-        return 0;
+          // let our main thread know on which thread to wait
+          lucky_thread = pthread_self();
+          found = 1; // kill off our other threads, asynchronously
+
+          RSA_free(rsa); // free up what's left
+
+          return 0;
+
+        } else { // -c option specified, keep going
+          printf("\n\n"); // put some space between each result
+        }
       }
 
       e += 2; // do *** NOT *** forget this!
