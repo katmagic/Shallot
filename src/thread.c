@@ -82,17 +82,18 @@ void *worker(void *params) { // life cycle of a cracking pthread
         if(!sane_key(rsa))        // check our key
           error(X_YOURE_UNLUCKY); // bad key :(
 
+        if (!continuous) { // no -c option — terminate
+          // let our main thread know on which thread to wait
+          lucky_thread = pthread_self();
+          found = 1; // kill off our other threads, asynchronously
+        }
+
         print_onion(onion); // print our domain
         print_prkey(rsa);   // and more importantly the key
 
         if (!continuous) { // no -c option — terminate
 
-          // let our main thread know on which thread to wait
-          lucky_thread = pthread_self();
-          found = 1; // kill off our other threads, asynchronously
-
           RSA_free(rsa); // free up what's left
-
           return 0;
 
         } else { // -c option specified, keep going
