@@ -154,6 +154,10 @@ int main(int argc, char *argv[]) { // onions are fun, here we go
           optimum = 1;
           break;
         }
+        case 'c': { // continuous brute-forcing
+          continuous = 1;
+          break;
+        }
         case 'f': { // file <file>
           if((argv[x][y + 1] != '\0') || (x + 1 > argc)) {
             fprintf(stderr, "Error: -f format is '-f <file>'\n");
