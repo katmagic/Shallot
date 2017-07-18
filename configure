@@ -9,7 +9,7 @@ if [ `uname -s | grep -i bsd` ]; then
 	echo "BSD detected!  Good job..."
 	>>$cfg_path echo "#define BSD"
 elif [ `uname -s | grep -i linux` ]; then
-	echo "Liunx detected.  Have you considered switching to BSD?"
+	echo "Linux detected.  Have you considered switching to BSD?"
 	>>$cfg_path echo "#define LINUX_PORT"
 elif [ `uname -s | grep -i darwin` ]; then
 	echo "OS X detected.  Who needs a GUI anyway?"
