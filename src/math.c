@@ -20,14 +20,19 @@ uint8_t BN_lcm(BIGNUM *r, BIGNUM *a, BIGNUM *b, BIGNUM *gcd, BN_CTX *ctx) {
   return 1;
 }
 
+
 // wraps RSA key generation, DER encoding, and initial SHA-1 hashing
 RSA *easygen(uint16_t num, uint8_t len, uint8_t *der, uint8_t edl,
              SHA_CTX *ctx) {
   uint8_t der_len;
   RSA *rsa;
+  BIGNUM *BN_three; // This may be replaced with a constant version of a BIGNUM
+
+  BN_dec2bn(&BN_three, "3");
 
   for(;;) { // ugly, I know, but better than using goto IMHO
-    rsa = RSA_generate_key(num, 3, NULL, NULL);
+    rsa = RSA_new();
+    RSA_generate_key_ex(rsa, num, BN_three, NULL);
 
     if(!rsa) // if key generation fails (no [P]RNG seed?)
       return rsa;
@@ -62,26 +67,43 @@ uint8_t sane_key(RSA *rsa) { // checks sanity of a RSA key (PKCS#1 v2.1)
          *q1     = BN_CTX_get(ctx), // q - 1
          *chk    = BN_CTX_get(ctx), // storage to run checks with
          *gcd    = BN_CTX_get(ctx), // GCD(p - 1, q - 1)
-         *lambda = BN_CTX_get(ctx); // LCM(p - 1, q - 1)
+	 *lambda = BN_CTX_get(ctx), // LCM(p - 1, q - 1)
+	 *rsap,
+	 *rsaq,
+	 *rsan,
+	 *rsad,
+	 *rsae,
+	 *rsadmp1,
+	 *rsadmq1,
+	 *rsaiqmp;
 
-  BN_sub(p1, rsa->p, BN_value_one()); // p - 1
-  BN_sub(q1, rsa->q, BN_value_one()); // q - 1
+  RSA_get0_factors(rsa, (const BIGNUM **)&rsap,
+		        (const BIGNUM **)&rsaq);
+  RSA_get0_key(rsa, (const BIGNUM **)&rsan,
+		    (const BIGNUM **)&rsae,
+	            (const BIGNUM **)&rsad);
+  RSA_get0_crt_params(rsa, (const BIGNUM **)&rsadmp1,
+		           (const BIGNUM **)&rsadmq1,
+		           (const BIGNUM **)&rsaiqmp);
+
+  BN_sub(p1, rsap, BN_value_one());   // p - 1
+  BN_sub(q1, rsaq, BN_value_one());   // q - 1
   BN_gcd(gcd, p1, q1, ctx);           // gcd(p - 1, q - 1)
   BN_lcm(lambda, p1, q1, gcd, ctx);   // lambda(n)
 
-  BN_gcd(chk, lambda, rsa->e, ctx); // check if e is coprime to lambda(n)
+  BN_gcd(chk, lambda, rsae, ctx); // check if e is coprime to lambda(n)
   if(!BN_is_one(chk))
     sane = 0;
 
   // check if public exponent e is less than n - 1
-  BN_sub(chk, rsa->e, rsa->n); // subtract n from e to avoid checking BN_is_zero
-  if(!chk->neg)
+  BN_sub(chk, rsae, rsan); // subtract n from e to avoid checking BN_is_zero
+  if(!BN_is_negative(chk))
     sane = 0;
 
-  BN_mod_inverse(rsa->d, rsa->e, lambda, ctx);    // d
-  BN_mod(rsa->dmp1, rsa->d, p1, ctx);             // d mod (p - 1)
-  BN_mod(rsa->dmq1, rsa->d, q1, ctx);             // d mod (q - 1)
-  BN_mod_inverse(rsa->iqmp, rsa->q, rsa->p, ctx); // q ^ -1 mod p
+  BN_mod_inverse(rsad, rsae, lambda, ctx);    // d
+  BN_mod(rsadmp1, rsad, p1, ctx);             // d mod (p - 1)
+  BN_mod(rsadmq1, rsad, q1, ctx);             // d mod (q - 1)
+  BN_mod_inverse(rsaiqmp, rsaq, rsap, ctx);   // q ^ -1 mod p
   BN_CTX_end(ctx);
   BN_CTX_free(ctx);
 
