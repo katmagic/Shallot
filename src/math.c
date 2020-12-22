@@ -24,10 +24,12 @@ uint8_t BN_lcm(BIGNUM *r, BIGNUM *a, BIGNUM *b, BIGNUM *gcd, BN_CTX *ctx) {
 RSA *easygen(uint16_t num, uint8_t len, uint8_t *der, uint8_t edl,
              SHA_CTX *ctx) {
   uint8_t der_len;
-  RSA *rsa;
+  RSA *rsa = RSA_new();
+  BIGNUM *BN_three;
+  BN_dec2bn(&BN_three, "3");
 
   for(;;) { // ugly, I know, but better than using goto IMHO
-    rsa = RSA_generate_key(num, 3, NULL, NULL);
+    RSA_generate_key_ex(rsa, num, BN_three, NULL);
 
     if(!rsa) // if key generation fails (no [P]RNG seed?)
       return rsa;
@@ -62,26 +64,29 @@ uint8_t sane_key(RSA *rsa) { // checks sanity of a RSA key (PKCS#1 v2.1)
          *q1     = BN_CTX_get(ctx), // q - 1
          *chk    = BN_CTX_get(ctx), // storage to run checks with
          *gcd    = BN_CTX_get(ctx), // GCD(p - 1, q - 1)
-         *lambda = BN_CTX_get(ctx); // LCM(p - 1, q - 1)
-
-  BN_sub(p1, rsa->p, BN_value_one()); // p - 1
-  BN_sub(q1, rsa->q, BN_value_one()); // q - 1
+         *lambda = BN_CTX_get(ctx), // LCM(p - 1, q - 1)
+         *p, *q, *n, *e, *d, *dmp1, *dmq1, *iqmp;
+  RSA_get0_factors(rsa, (const BIGNUM **)&p, (const BIGNUM **)&q);
+  BN_sub(p1, p, BN_value_one()); // p - 1
+  BN_sub(q1, q, BN_value_one()); // q - 1
   BN_gcd(gcd, p1, q1, ctx);           // gcd(p - 1, q - 1)
   BN_lcm(lambda, p1, q1, gcd, ctx);   // lambda(n)
 
-  BN_gcd(chk, lambda, rsa->e, ctx); // check if e is coprime to lambda(n)
+  RSA_get0_key(rsa, (const BIGNUM **)&n, (const BIGNUM **)&e, (const BIGNUM **)&d);
+  BN_gcd(chk, lambda, e, ctx); // check if e is coprime to lambda(n)
   if(!BN_is_one(chk))
     sane = 0;
 
   // check if public exponent e is less than n - 1
-  BN_sub(chk, rsa->e, rsa->n); // subtract n from e to avoid checking BN_is_zero
-  if(!chk->neg)
+  BN_sub(chk, e, n); // subtract n from e to avoid checking BN_is_zero
+  if(!BN_is_negative(chk))
     sane = 0;
 
-  BN_mod_inverse(rsa->d, rsa->e, lambda, ctx);    // d
-  BN_mod(rsa->dmp1, rsa->d, p1, ctx);             // d mod (p - 1)
-  BN_mod(rsa->dmq1, rsa->d, q1, ctx);             // d mod (q - 1)
-  BN_mod_inverse(rsa->iqmp, rsa->q, rsa->p, ctx); // q ^ -1 mod p
+  RSA_get0_crt_params(rsa, (const BIGNUM **)&dmp1, (const BIGNUM **)&dmq1, (const BIGNUM **)&iqmp);
+  BN_mod_inverse(d, e, lambda, ctx);    // d
+  BN_mod(dmp1, d, p1, ctx);             // d mod (p - 1)
+  BN_mod(dmq1, d, q1, ctx);             // d mod (q - 1)
+  BN_mod_inverse(iqmp, q, p, ctx); // q ^ -1 mod p
   BN_CTX_end(ctx);
   BN_CTX_free(ctx);
 

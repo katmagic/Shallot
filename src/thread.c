@@ -32,6 +32,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
   char onion[BASE32_ONIONLEN];
   SHA_CTX hash, copy;
   RSA *rsa;
+  BIGNUM *rsae;
 
   while(!found) {
     // keys are only generated every so often
@@ -43,6 +44,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
     else
       rsa = easygen(RSA_KEYS_BITLEN, RSA_PK_E_LENGTH, der, RSA_EXP_DER_LEN,
                     &hash);
+    RSA_get0_key(rsa, NULL, (const BIGNUM **)&rsae, NULL);
 
     if(!rsa) // if key generation fails (no [P]RNG seed?)
       error(X_KEY_GEN_FAILS);
@@ -71,8 +73,8 @@ void *worker(void *params) { // life cycle of a cracking pthread
       base32_onion(onion, buf); // base32-encode SHA1 digest
       loop++;                   // keep track of our tries...
 
-      if(!regexec(regex, onion, 0, 0, 0)) { // check for a match
-
+      if(regex ? (!regexec(regex, onion, 0, 0, 0))
+               : (memcmp(prefix, onion, prefix_size) == 0)) { // check for a match
         // let our main thread know on which thread to wait
         lucky_thread = pthread_self();
         found = 1; // kill off our other threads, asynchronously
@@ -80,7 +82,7 @@ void *worker(void *params) { // life cycle of a cracking pthread
         if(monitor)
           printf("\n"); // keep our printing pretty!
 
-        if(!BN_bin2bn(e_ptr, e_bytes, rsa->e)) // store our e in the actual key
+        if(!BN_bin2bn(e_ptr, e_bytes, rsae))   // store our e in the actual key
           error(X_BIGNUM_FAILED);              // and make sure it got there
 
         if(!sane_key(rsa))        // check our key
